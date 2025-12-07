@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: operations_frontend
+    ports:
+      - "8080:80"   # 本机 8080 -> 容器 80
+    restart: unless-stopped
