@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: operations_backend
+    env_file:
+      - ./backend/.env   # 如果你有 env 就会自动加载
+    expose:
+      - "8000"           # 仅在内部网络暴露给 frontend
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: operations_frontend
+    ports:
+      - "8080:80"        # 浏览器访问 http://localhost:8080
+    depends_on:
+      - backend
+    restart: unless-stopped
