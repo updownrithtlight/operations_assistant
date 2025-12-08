@@ -1,7 +1,8 @@
 # backend/app/config.py
 import os
 from datetime import timedelta
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
@@ -49,7 +50,6 @@ class Config:
         "ONLYOFFICE_JWT_SECRET",
         "MyJWTSecretKey123"
     )
-    ONLYOFFICE_FILE_DIR = os.environ.get("ONLYOFFICE_FILE_DIR","D:\dev")
     ONLYOFFICE_VERIFY_INBOX=False
     DOCUMENT_SERVER_COMMAND_URL =os.environ.get("DOCUMENT_SERVER_COMMAND_URL", "http://192.168.31.145:8080/coauthoring/CommandService.ashx")
 class DevConfig(Config):

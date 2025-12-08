@@ -1,4 +1,4 @@
-from . import user, document, menu, auth, kb_routes, onlyoffice,onlyoffice_local_router
+from . import user, document, menu, auth, kb_routes, onlyoffice
 
 
 def register_blueprints(app):
