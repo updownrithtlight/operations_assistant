@@ -48,7 +48,7 @@ import {
   uploadFiles,
   deleteFile,
   downloadFile,
-   previewFile,   // ⭐ 新增
+  previewFile,   // ⭐ 新增
 } from '../../api/minioUpload';
 
 
@@ -95,8 +95,9 @@ const getFileTypeText = (item) => {
 };
 // ⭐ 浏览器直接预览的扩展名（图片 + pdf）
 const BROWSER_PREVIEW_EXTS = [
-  'pdf',
-  'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg',
+ 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp',
+  'txt', 'json', 'log', 'md', 'csv',
+  'mp3', 'wav', 'mp4', 'webm'
 ];
 
 const isBrowserPreviewable = (item) => {
@@ -114,7 +115,7 @@ const ONLYOFFICE_EDITABLE_EXTS = [
   'xls', 'xlsx',
   'ppt', 'pptx',
   'odt', 'ods', 'odp',
-  'rtf', 'txt'
+  'rtf', 
 ];
 
 const isOnlyOfficeEditable = (item) => {
