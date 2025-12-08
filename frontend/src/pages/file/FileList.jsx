@@ -378,10 +378,6 @@ const handleOpenInBrowser = async (record) => {
   }
   try {
     const url = await  previewFile(record.document_id);
-    if (!url) {
-      message.error('未获取到预览地址');
-      return;
-    }
     window.open(url, '_blank', 'noopener,noreferrer');
   } catch (e) {
     console.error(e);
