@@ -2,8 +2,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
-from app.services import onlyoffice_service
-from app.exceptions.exceptions import CustomAPIException
+from ..services import onlyoffice_service
+from ..exceptions.exceptions import CustomAPIException
 
 bp = Blueprint("onlyoffice", __name__)
 

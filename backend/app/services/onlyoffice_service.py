@@ -10,12 +10,12 @@ from datetime import datetime
 from flask import current_app, request, jsonify, send_file
 from flask_jwt_extended import get_jwt_identity
 
-from app.models.result import ResponseTemplate
-from app.models.user import User
-from app.models.document import Document, DocumentStatus
-from app.utils import minio_storage  # 引入刚才修改的 minio_storage
-from app.extensions import db
-from app.exceptions.exceptions import CustomAPIException
+from ..models.result import ResponseTemplate
+from ..models.user import User
+from ..models.document import Document, DocumentStatus
+from ..utils import minio_storage  # 引入刚才修改的 minio_storage
+from ..extensions import db
+from ..exceptions.exceptions import CustomAPIException
 
 
 # ============== 工具函数 ==============
