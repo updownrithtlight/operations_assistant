@@ -158,3 +158,16 @@ export const updateFile = async (
     throw new Error('File update failed.');
   }
 };
+
+export const previewFile = async (documentId) => {
+  try {
+    const { data } = await request.get(`/file/${documentId}/download-url`, {
+      params: { mode: 'inline' }, // ⭐ 告诉后端要 inline
+    });
+    window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
+  } catch (error) {
+    console.error(`File preview failed: ${error?.message || error}`);
+    throw new Error('File preview failed.');
+  }
+};
+

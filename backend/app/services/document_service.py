@@ -125,9 +125,12 @@ def confirm_upload():
 
     return ResponseTemplate.success(message="确认上传成功")
 
+
 def generate_download_url(document_id: int):
     """
     GET /api/file/<int:document_id>/download-url
+    ?mode=inline  → 浏览器预览
+    ?mode=download / 无 → 附件下载
     """
     doc = Document.query.get(document_id)
     if not doc:
@@ -138,17 +141,22 @@ def generate_download_url(document_id: int):
     if doc.status != DocumentStatus.COMPLETED:
         raise CustomAPIException("Document is not ready for download", 400)
 
+    mode = request.args.get("mode", "download")
+    as_attachment = mode != "inline"  # inline 模式不作为附件
+
     url = generate_presigned_download_url(
         bucket=doc.bucket,
         object_key=doc.object_key,
         ttl=timedelta(minutes=15),
         download_filename=doc.file_name,
         request=request,
+        as_attachment=as_attachment,  # ⭐ 关键
     )
 
     return ResponseTemplate.success(
         data={"downloadUrl": url}
     )
+
 
 def delete_document(document_id: int):
     """

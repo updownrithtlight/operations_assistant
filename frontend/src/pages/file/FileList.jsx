@@ -44,12 +44,13 @@ import {
    
 } from '../../api/kb';
 import {
-uploadFile,
-uploadFiles,
-deleteFile,
-downloadFile,
-
+  uploadFile,
+  uploadFiles,
+  deleteFile,
+  downloadFile,
+   previewFile,   // ⭐ 新增
 } from '../../api/minioUpload';
+
 
 const { Search } = Input;
 
@@ -91,6 +92,20 @@ const getFileTypeText = (item) => {
     return item.name.split('.').pop();
   }
   return '';
+};
+// ⭐ 浏览器直接预览的扩展名（图片 + pdf）
+const BROWSER_PREVIEW_EXTS = [
+  'pdf',
+  'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg',
+];
+
+const isBrowserPreviewable = (item) => {
+  if (!item || item.is_folder) return false;
+  const name = item.name || '';
+  const idx = name.lastIndexOf('.');
+  if (idx === -1) return false;
+  const ext = name.slice(idx + 1).toLowerCase();
+  return BROWSER_PREVIEW_EXTS.includes(ext);
 };
 
 // ⭐ OnlyOffice 支持在线编辑的扩展名（前后端要保持一致）
@@ -353,6 +368,26 @@ const KnowledgeBasePage = () => {
   // 用 React Router 跳转到编辑页
   navigate(`/kb/editor?fileId=${record.document_id}&mode=edit`);
 };
+
+/** 图片 / PDF 浏览器新开标签页预览 */
+const handleOpenInBrowser = async (record) => {
+  if (!record || !record.document_id) {
+    message.error('没有关联的 document_id，无法预览');
+    return;
+  }
+  try {
+    const url = await  previewFile(record.document_id);
+    if (!url) {
+      message.error('未获取到预览地址');
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } catch (e) {
+    console.error(e);
+    message.error(e.message || '打开预览失败');
+  }
+};
+
 
 
 
@@ -769,13 +804,30 @@ const KnowledgeBasePage = () => {
   };
 
   /** 双击文件/目录 */
-  const handleItemClick = (item) => {
-    if (item.is_folder) {
-      locateToFolder(item.kbId || item.id);
-    } else {
-      handleDownload(item);
-    }
-  };
+/** 双击文件/目录 */
+const handleItemClick = (item) => {
+  if (item.is_folder) {
+    // 文件夹 → 打开该目录
+    locateToFolder(item.kbId || item.id);
+    return;
+  }
+
+  // 1）可在线编辑的 Office → OnlyOffice
+  if (isOnlyOfficeEditable(item)) {
+    handleOpenOnlineEdit(item);
+    return;
+  }
+
+  // 2）图片 & PDF → 浏览器预览
+  if (isBrowserPreviewable(item)) {
+    handleOpenInBrowser(item);
+    return;
+  }
+
+  // 3）其他类型 → 按原逻辑下载
+  handleDownload(item);
+};
+
 
   /** 当前目录下的“文件夹列表” */
   const childFolders = (() => {
@@ -1186,42 +1238,55 @@ const KnowledgeBasePage = () => {
 
                       {/* 操作按钮 */}
                       {!isFolder && (
-                        <Space style={{ flexShrink: 0 }}>
-                              {isOnlyOfficeEditable(item) && (
-                        <Button
-                          size="small"
-                          type="primary"
-                          ghost
-                          onClick={() => handleOpenOnlineEdit(item)}
-                        >
-                          在线编辑
-                        </Button>
-                      )}
-                          <Button
-                            size="small"
-                            onClick={() => handleDownload(item)}
-                          >
-                            下载
-                          </Button>
-                          <Button
-                            size="small"
-                            icon={<TagsOutlined />}
-                            onClick={() => openEditTagsModal(item)}
-                          >
-                            标签
-                          </Button>
-                          <Popconfirm
-                            title="确认删除该文件？"
-                            okText="删除"
-                            cancelText="取消"
-                            onConfirm={() => doDeleteFile(item)}
-                          >
-                            <Button size="small" danger>
-                              删除
-                            </Button>
-                          </Popconfirm>
-                        </Space>
-                      )}
+  <Space style={{ flexShrink: 0 }}>
+    {isOnlyOfficeEditable(item) && (
+      <Button
+        size="small"
+        type="primary"
+        ghost
+        onClick={() => handleOpenOnlineEdit(item)}
+      >
+        在线编辑
+      </Button>
+    )}
+
+    {isBrowserPreviewable(item) && (
+      <Button
+        size="small"
+        onClick={() => handleOpenInBrowser(item)}
+      >
+        预览
+      </Button>
+    )}
+
+    <Button
+      size="small"
+      onClick={() => handleDownload(item)}
+    >
+      下载
+    </Button>
+
+    <Button
+      size="small"
+      icon={<TagsOutlined />}
+      onClick={() => openEditTagsModal(item)}
+    >
+      标签
+    </Button>
+
+    <Popconfirm
+      title="确认删除该文件？"
+      okText="删除"
+      cancelText="取消"
+      onConfirm={() => doDeleteFile(item)}
+    >
+      <Button size="small" danger>
+        删除
+      </Button>
+    </Popconfirm>
+  </Space>
+)}
+
                     </List.Item>
                   </Dropdown>
                 );

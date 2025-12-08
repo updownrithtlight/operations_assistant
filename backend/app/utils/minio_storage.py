@@ -122,13 +122,13 @@ def generate_presigned_upload_url(
 
     dynamic_public_base = _build_dynamic_public_base(request)
     return _rewrite_to_public_url(raw_url, dynamic_public_base)
-
 def generate_presigned_download_url(
     bucket: str,
     object_key: str,
     ttl: Union[int, timedelta, None],
     download_filename: Optional[str],
     request: Optional[Request],
+    as_attachment: bool = True,   # ⭐ 新增，默认还是附件下载
 ) -> str:
     """
     生成下载预签名 URL，对应 Java 的 generatePresignedDownloadUrl。
@@ -145,7 +145,9 @@ def generate_presigned_download_url(
 
     extra_params: Dict[str, str] = {}
     if download_filename:
-        disposition = f'attachment; filename="{download_filename}"'
+        # ⭐ 根据 as_attachment 决定 attachment / inline
+        disposition_type = "attachment" if as_attachment else "inline"
+        disposition = f'{disposition_type}; filename="{download_filename}"'
         extra_params["response-content-disposition"] = disposition
 
     try:
@@ -160,6 +162,7 @@ def generate_presigned_download_url(
 
     dynamic_public_base = _build_dynamic_public_base(request)
     return _rewrite_to_public_url(raw_url, dynamic_public_base)
+
 
 
 
