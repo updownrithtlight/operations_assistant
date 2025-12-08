@@ -12,7 +12,6 @@ import LoginPage from "../pages/auth/Login";
 const ProfilePage = React.lazy(() => import("../pages/system/Profile"));
 const SettingsPage = React.lazy(() => import("../pages/system/Settings"));
 const EditorPage = React.lazy(() => import("../pages/file/EditorPage"));
-const LocalEditorPage = React.lazy(() => import("../pages/onlyoffice/LocalEditorPage."));
 /**
  * 简单登录守卫：判断 sessionStorage 里有没有 access_token
  */
@@ -112,7 +111,6 @@ export const AppRouter = () => {
           <Route path="system/profile" element={<ProfilePage />} />
           <Route path="system/settings" element={<SettingsPage />} />
           <Route path="/kb/editor" element={<EditorPage />} />
-          <Route path="/onlyoffice_local/editor" element={<LocalEditorPage />} />
 
           {/* 兜底 404 */}
           <Route
