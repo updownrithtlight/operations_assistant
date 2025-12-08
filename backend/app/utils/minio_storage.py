@@ -14,6 +14,7 @@ def get_minio_client() -> Minio:
     获取 MinIO 客户端，使用配置：
     MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_SECURE
     """
+    print(current_app.config["MINIO_ENDPOINT"])
     return Minio(
         current_app.config["MINIO_ENDPOINT"],
         access_key=current_app.config["MINIO_ACCESS_KEY"],

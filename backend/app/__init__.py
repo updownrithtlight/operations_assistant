@@ -5,8 +5,10 @@ from flask_cors import CORS
 from .config import config_map
 from .extensions import init_extensions
 from .api import register_blueprints
+from .logging_config import setup_logging
 from .utils.datetime_provider import BJJSONProvider
 from .exceptions.exceptions import CustomAPIException  # 你的自定义异常:contentReference[oaicite:0]{index=0}
+from .utils.config_inspector import dump_config
 
 
 def handle_custom_api_exception(e: CustomAPIException):
@@ -21,6 +23,7 @@ def handle_custom_api_exception(e: CustomAPIException):
 
 
 def create_app(config_name: str = "dev") -> Flask:
+    setup_logging(level="DEBUG" if config_name == "dev" else "INFO")
     app = Flask(__name__)
 
     # CORS 设置（保持你原来的配置）
@@ -52,4 +55,15 @@ def create_app(config_name: str = "dev") -> Flask:
     # ⭐ 在工厂函数里注册全局异常处理
     app.register_error_handler(CustomAPIException, handle_custom_api_exception)
 
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(e):
+        # 打印完整堆栈到日志（console + logs/app.log）
+        app.logger.exception("Unhandled Exception:")
+        return jsonify({
+            "code": 1,
+            "message": "Internal server error",
+            "data": None,
+        }), 500
+
+    dump_config(app)
     return app

@@ -7,15 +7,15 @@ from flask import request, current_app
 from ..extensions import db
 
 # 这里直接用刚刚建好的模型和枚举
-from app.models.document import Document, DocumentStatus, FileType
+from ..models.document import Document, DocumentStatus, FileType
 
-from app.utils.minio_storage import (
+from ..utils.minio_storage import (
     generate_presigned_upload_url,
     generate_presigned_download_url,
     delete_object,
 )
-from app.models.result import ResponseTemplate
-from app.exceptions.exceptions import CustomAPIException
+from ..models.result import ResponseTemplate
+from ..exceptions.exceptions import CustomAPIException
 
 
 def _build_object_key(req_json: dict) -> str:
