@@ -14,6 +14,7 @@ const Dashboard = React.lazy(() => import("../pages/dashboard/Dashboard"));
 const UserList = React.lazy(() => import("../pages/system/UserList"));
 const MenuList = React.lazy(() => import("../pages/system/MenuList"));
 const FileList = React.lazy(() => import("../pages/file/FileList"));
+const TiptapDemoPage = React.lazy(() => import("../pages/demo/TiptapDemoPage"));
 
 
 // 1. 图标映射：数据库里的 icon 字段用这些字符串
@@ -31,6 +32,7 @@ export const componentMap = {
   "pages/system/UserList": UserList,
   "pages/system/MenuList": MenuList,
   "pages/file/FileList": FileList,
+  "pages/demo/TiptapDemoPage": TiptapDemoPage,
   Layout: null, // 纯分组节点
 };
 

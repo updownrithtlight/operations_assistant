@@ -60,3 +60,23 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+/* Tiptap 编辑器基础样式 */
+.rt-tiptap-wrapper .ProseMirror {
+  outline: none;
+  white-space: pre-wrap;
+}
+
+/* 让表格有边框，格子能看见 */
+.rt-tiptap-wrapper .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.rt-tiptap-wrapper .ProseMirror th,
+.rt-tiptap-wrapper .ProseMirror td {
+  border: 1px solid #d9d9d9;
+  padding: 4px 8px;
+  vertical-align: top;
+}

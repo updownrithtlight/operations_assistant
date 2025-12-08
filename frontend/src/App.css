@@ -34,3 +34,26 @@
 .read-the-docs {
   color: #888;
 }
+
+
+/* Tiptap / ProseMirror 默认样式补齐一点，免得像纯 div */
+.ProseMirror {
+  min-height: 200px;
+  outline: none;
+  line-height: 1.6;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.5em;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  border: 1px solid #d9d9d9;
+  padding: 4px 8px;
+}

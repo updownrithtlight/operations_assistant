@@ -14,6 +14,7 @@ class FileType(str, Enum):
     DRAWING = "DRAWING"
     CONTRACT = "CONTRACT"
     OTHER = "OTHER"
+    RICH_TEXT_IMAGE = "RICH_TEXT_IMAGE"
 
 
 class DocumentStatus(str, Enum):
