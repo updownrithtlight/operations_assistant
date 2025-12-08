@@ -1,22 +1,30 @@
-version: "3.9"
-
 services:
   backend:
     build:
       context: ./backend
+    environment:
+      - APP_ENV=prod
     container_name: operations_backend
     env_file:
-      - ./backend/.env   # 如果你有 env 就会自动加载
+      - ./backend/.env
     expose:
-      - "8000"           # 仅在内部网络暴露给 frontend
+      - "8000"
     restart: unless-stopped
+    networks:
+      - operations_net
 
   frontend:
     build:
       context: ./frontend
     container_name: operations_frontend
     ports:
-      - "80:80"        # 浏览器访问 http://localhost:8080
+      - "80:80"
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - operations_net
+
+networks:
+  operations_net:
+    driver: bridge

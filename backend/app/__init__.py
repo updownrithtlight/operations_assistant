@@ -27,17 +27,14 @@ def create_app(config_name: str = "dev") -> Flask:
     CORS(
         app,
         supports_credentials=True,
-        resources={
-            r"/*": {
-                "origins": [
-                    "http://localhost:5173",
-                    r"http://192\.168\.\d+\.\d+(:\d+)?",  # 内网段
-                    r"http://10\.\d+\.\d+\.\d+(:\d+)?",
-                    r"http://172\.(1[6-9]|2\d|3[0-1])\.\d+.\d+(:\d+)?",
-                    "https://your.domain.com",  # 你的域名（如有）
-                ]
-            }
-        },
+        resources={r"/api/*": {  # 只对 API 开 CORS 即可
+            "origins": [
+                "http://localhost:5173",  # 本机开发
+                "http://192.168.31.145",  # 内网通过 Nginx 访问
+                "http://192.168.31.145:80",  # 有些浏览器会带端口
+                "https://tools.billlvtech.site",  # 以后正式域名
+            ]
+        }},
         expose_headers=["Content-Disposition"],
     )
 
