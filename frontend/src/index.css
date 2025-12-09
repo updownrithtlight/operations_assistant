@@ -61,28 +61,64 @@ button:focus-visible {
   }
 }
 
-
 /* Tiptap 编辑器基础样式 */
 .rt-tiptap-wrapper .ProseMirror {
   outline: none;
   white-space: pre-wrap;
 }
 
-/* 让表格有边框，格子能看见 */
+/* 让表格有边框，格子能看见；用 max-width，不要锁死 100% */
 .rt-tiptap-wrapper .ProseMirror table {
   border-collapse: collapse;
-  width: 100%;
+  width: 100%; /* ⭐ 关键：允许我们用 style="width: xxxpx" 控制宽度 */
 }
 
+/* 表格单元格：带边框，支持放拖动把手 */
 .rt-tiptap-wrapper .ProseMirror th,
 .rt-tiptap-wrapper .ProseMirror td {
   border: 1px solid #d9d9d9;
   padding: 4px 8px;
   vertical-align: top;
+  position: relative; /* ⭐ 为列宽拖动把手预留定位 */
 }
 
-/* 选中的单元格高亮（类似 TinyMCE 的蓝色） */
+/* 列宽拖动的小把手（在单元格右边缘） */
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  z-index: 20;
+  background-color: rgba(33, 150, 243, 0.35);
+}
+
+/* 鼠标拖动列宽时的光标 */
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* 选中的单元格高亮 */
 .ProseMirror table td.selectedCell,
 .ProseMirror table th.selectedCell {
   background-color: #cce5ff;
+}
+
+/* 表格整体缩放 handle（右下角小方块） */
+.ProseMirror table.rt-table {
+  position: relative;
+}
+
+.ProseMirror .table-resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  right: -4px;
+  bottom: -4px;
+  cursor: nwse-resize;
+  background-color: #fff;
+  border: 1px solid #1890ff;
+  box-sizing: border-box;
+  z-index: 30;
 }

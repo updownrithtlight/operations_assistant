@@ -34,14 +34,17 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
+// import Image from '@tiptap/extension-image';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
-import { Table } from '@tiptap/extension-table';
+import { Table as TiptapTable } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableCell } from '@tiptap/extension-table-cell';
+import Image from 'tiptap-extension-resize-image';
+import { Extension } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 import TableSizePicker from './TableSizePicker';
 import ColorPalette from './ColorPalette';
@@ -51,6 +54,191 @@ import { uploadFile } from '../../api/minioUpload';
 import request from '../../utils/request';
 
 const DEFAULT_IMAGE_FILE_TYPE = 'RICH_TEXT_IMAGE';
+
+// 整体表格宽高拖动的 View
+class TableResizeView {
+  constructor(view) {
+    this.view = view;
+    this.handles = [];
+    this.dragging = null;
+    this.rafId = null;
+    this.lastClientX = null;
+    this.lastClientY = null;
+    this.prevDoc = view.state.doc;
+
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleMouseUp = this.handleMouseUp.bind(this);
+
+    this.createHandles();
+  }
+
+  update(view, prevState) {
+    this.view = view;
+    const docChanged = !prevState.doc.eq(view.state.doc);
+    if (!docChanged) return;
+
+    this.prevDoc = view.state.doc;
+    this.destroyHandles();
+    this.createHandles();
+  }
+
+  destroy() {
+    this.destroyHandles();
+    this.removeListeners();
+    if (this.rafId != null) {
+      window.cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+  }
+
+  destroyHandles() {
+    this.handles.forEach(h => {
+      h.removeEventListener('mousedown', this.handleMouseDown);
+      if (h.parentElement) {
+        h.parentElement.removeChild(h);
+      }
+    });
+    this.handles = [];
+  }
+
+  removeListeners() {
+    window.removeEventListener('mousemove', this.handleMouseMove);
+    window.removeEventListener('mouseup', this.handleMouseUp);
+  }
+
+  createHandles() {
+    const dom = this.view.dom;
+    // 只找富文本里的表格
+    const tables = dom.querySelectorAll('table.rt-table, table[data-type="table"]');
+    if (!tables.length) return;
+
+    tables.forEach(table => {
+      const handle = document.createElement('div');
+      handle.className = 'table-resize-handle';
+      handle.addEventListener('mousedown', this.handleMouseDown);
+
+      const pos = this.view.posAtDOM(table, 0);
+      handle.dataset.tablePos = String(pos);
+
+      table.appendChild(handle);
+      this.handles.push(handle);
+    });
+  }
+
+  handleMouseDown(e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+
+    const handle = e.target;
+    const tablePos = Number(handle.dataset.tablePos);
+    if (!tablePos) return;
+
+    const tableEl = handle.parentElement;
+    if (!tableEl) return;
+
+    const rect = tableEl.getBoundingClientRect();
+
+    this.dragging = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: rect.width,
+      startHeight: rect.height,
+      tablePos,
+    };
+
+    this.lastClientX = e.clientX;
+    this.lastClientY = e.clientY;
+
+    window.addEventListener('mousemove', this.handleMouseMove);
+    window.addEventListener('mouseup', this.handleMouseUp);
+  }
+
+  handleMouseMove(e) {
+    if (!this.dragging) return;
+
+    this.lastClientX = e.clientX;
+    this.lastClientY = e.clientY;
+
+    if (this.rafId != null) return;
+    this.rafId = window.requestAnimationFrame(() => {
+      this.rafId = null;
+      if (!this.dragging) return;
+
+      const {
+        startX,
+        startY,
+        startWidth,
+        startHeight,
+        tablePos,
+      } = this.dragging;
+
+      const dx = this.lastClientX - startX;
+      const dy = this.lastClientY - startY;
+
+      const newWidth = Math.max(200, startWidth + dx);
+      const newHeight = Math.max(60, startHeight + dy); // 不需要高度可以只用 newWidth
+
+      const { state, dispatch } = this.view;
+      const $pos = state.doc.resolve(tablePos);
+      const tableNode = $pos.nodeAfter;
+      if (!tableNode) return;
+
+      const tr = state.tr.setNodeMarkup(tablePos, tableNode.type, {
+        ...tableNode.attrs,
+        tableWidth: `${newWidth}px`,
+        tableHeight: `${newHeight}px`,
+      });
+
+      dispatch(tr);
+    });
+  }
+
+  handleMouseUp() {
+    this.dragging = null;
+    this.removeListeners();
+  }
+}
+
+// 插件扩展
+const TableResize = Extension.create({
+  name: 'tableResize',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('tableResize'),
+        view: view => new TableResizeView(view),
+      }),
+    ];
+  },
+});
+
+
+// 带宽高属性的 Table
+const TableWithSize = TiptapTable.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      tableWidth: {
+        default: null,
+        parseHTML: element => element.style.width || null,
+        renderHTML: attrs => {
+          if (!attrs.tableWidth) return {};
+          return { style: `width: ${attrs.tableWidth};` };
+        },
+      },
+      tableHeight: {
+        default: null,
+        parseHTML: element => element.style.height || null,
+        renderHTML: attrs => {
+          if (!attrs.tableHeight) return {};
+          return { style: `height: ${attrs.tableHeight};` };
+        },
+      },
+    };
+  },
+});
+
 
 const RichTextEditorTiptap = ({
   value,
@@ -65,6 +253,10 @@ const RichTextEditorTiptap = ({
         StarterKit.configure({
           history: true,
         }),
+        Image.configure({
+      allowBase64: true,
+      inline: false,
+      }),
         Underline,
         Link.configure({
           openOnClick: false,
@@ -75,12 +267,20 @@ const RichTextEditorTiptap = ({
         TextAlign.configure({
           types: ['heading', 'paragraph'],
         }),
-        Table.configure({
+        // Table.configure({
+        //   resizable: true,
+        //   lastColumnResizable: true,        // 最后一列也能拖
+        //   HTMLAttributes: { class: 'rt-table' },
+        // }),
+        TableWithSize.configure({
           resizable: true,
+          lastColumnResizable: true,        // 最后一列也能拖
+          HTMLAttributes: { class: 'rt-table' }, // 用于查询 & CSS
         }),
-        TableRow,
+       TableRow,
         TableHeader,
         TableCell,
+        TableResize,
       ],
       content: value || '<p></p>',
       editable: !readOnly,
