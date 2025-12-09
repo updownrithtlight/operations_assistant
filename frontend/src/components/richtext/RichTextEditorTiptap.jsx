@@ -113,6 +113,10 @@ const RichTextEditorTiptap = ({
     if (editor.isActive('heading', { level: 1 })) return 'h1';
     if (editor.isActive('heading', { level: 2 })) return 'h2';
     if (editor.isActive('heading', { level: 3 })) return 'h3';
+    if (editor.isActive('heading', { level: 4 })) return 'h4';
+    if (editor.isActive('heading', { level: 5 })) return 'h5';
+    if (editor.isActive('heading', { level: 6 })) return 'h6';
+
     return 'p';
   }, [editor]);
 
@@ -292,6 +296,9 @@ const RichTextEditorTiptap = ({
                   { label: '标题 1', value: 'h1' },
                   { label: '标题 2', value: 'h2' },
                   { label: '标题 3', value: 'h3' },
+                  { label: '标题 4', value: 'h4' },
+                  { label: '标题 5', value: 'h5' },
+                  { label: '标题 6', value: 'h6' },
                 ]}
               />
 

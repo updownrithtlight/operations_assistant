@@ -80,3 +80,9 @@ button:focus-visible {
   padding: 4px 8px;
   vertical-align: top;
 }
+
+/* 选中的单元格高亮（类似 TinyMCE 的蓝色） */
+.ProseMirror table td.selectedCell,
+.ProseMirror table th.selectedCell {
+  background-color: #cce5ff;
+}
