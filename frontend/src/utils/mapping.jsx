@@ -13,6 +13,7 @@ import {
 const Dashboard = React.lazy(() => import("../pages/dashboard/Dashboard"));
 const UserList = React.lazy(() => import("../pages/system/UserList"));
 const MenuList = React.lazy(() => import("../pages/system/MenuList"));
+const DownloadCenter = React.lazy(() => import("../pages/system/DownloadCenter"));
 const FileList = React.lazy(() => import("../pages/file/FileList"));
 const TiptapDemoPage = React.lazy(() => import("../pages/demo/TiptapDemoPage"));
 
@@ -31,6 +32,7 @@ export const componentMap = {
   "pages/Dashboard": Dashboard,
   "pages/system/UserList": UserList,
   "pages/system/MenuList": MenuList,
+  "pages/system/DownloadCenter": DownloadCenter,
   "pages/file/FileList": FileList,
   "pages/demo/TiptapDemoPage": TiptapDemoPage,
   Layout: null, // 纯分组节点

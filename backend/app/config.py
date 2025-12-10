@@ -52,6 +52,11 @@ class Config:
     )
     ONLYOFFICE_VERIFY_INBOX=False
     DOCUMENT_SERVER_COMMAND_URL =os.environ.get("DOCUMENT_SERVER_COMMAND_URL", "http://192.168.31.145:8080/coauthoring/CommandService.ashx")
+    YOUTUBE_DOWNLOAD_DIR = os.environ.get(
+        "YOUTUBE_DOWNLOAD_DIR",
+        os.path.join(os.getcwd(), "downloads", "youtube")
+    )
+    os.makedirs(YOUTUBE_DOWNLOAD_DIR, exist_ok=True)
 class DevConfig(Config):
     DEBUG = True
 

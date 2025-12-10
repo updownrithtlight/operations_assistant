@@ -1,4 +1,4 @@
-from . import user, document, menu, auth, kb_routes, onlyoffice
+from . import user, document, menu, auth, kb_routes, onlyoffice,youtube
 
 
 def register_blueprints(app):
@@ -8,3 +8,4 @@ def register_blueprints(app):
     app.register_blueprint(auth.bp, url_prefix="/api/auth")   # ★ 新增
     app.register_blueprint(kb_routes.bp, url_prefix="/api/kb")   # ★ 新增
     app.register_blueprint(onlyoffice.bp, url_prefix="/api/onlyoffice")
+    app.register_blueprint(youtube.bp, url_prefix="/api/youtube")
