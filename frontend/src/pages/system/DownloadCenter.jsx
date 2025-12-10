@@ -287,6 +287,30 @@ export default function DownloadCenter() {
       dataIndex: "quality",
       width: 80,
     },
+        {
+      title: "封面",
+      dataIndex: "thumbnail",
+      width: 120,
+      render: (thumb, record) => {
+        if (!thumb) {
+          return <Text type="secondary">-</Text>;
+        }
+        return (
+          <a href={thumb} target="_blank" rel="noreferrer">
+            <img
+              src={thumb}
+              alt={record.title || "thumbnail"}
+              style={{
+                width: 80,
+                height: 45,
+                objectFit: "cover",
+                borderRadius: 4,
+              }}
+            />
+          </a>
+        );
+      },
+    },
     {
       title: "状态",
       dataIndex: "status",
