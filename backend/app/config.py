@@ -57,6 +57,7 @@ class Config:
         os.path.join(os.getcwd(), "downloads", "youtube")
     )
     os.makedirs(YOUTUBE_DOWNLOAD_DIR, exist_ok=True)
+    PROXY_URL= os.environ.get("PROXY_URL")
 class DevConfig(Config):
     DEBUG = True
 

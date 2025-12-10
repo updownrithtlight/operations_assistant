@@ -64,21 +64,14 @@ def _build_video_format(quality: str) -> str:
         # 没传清晰度时的兜底：优先 mp4，其次任意 best
         return "best[ext=mp4]/best"
 
-
 def _download_once(
     url: str,
     fmt: str,
     outtmpl: str,
     merge_output_format: str | None = None,
 ):
-    """
-    封装一次 yt-dlp 调用，返回 (info, filepath)。
+    proxy = Config.PROXY_URL
 
-    注意：
-      - 不强制指定 js_runtimes，避免 EJS 相关的告警干扰；
-      - 让 yt-dlp 自己根据 format 选择合适流；
-      - 若指定 merge_output_format，则让 yt-dlp/ffmpeg 进行合并。
-    """
     ydl_opts: dict = {
         "format": fmt,
         "outtmpl": outtmpl,
@@ -87,6 +80,11 @@ def _download_once(
         "noplaylist": True,
         "no_keep_fragments": True,
     }
+
+    # 如果设置了代理就让 yt-dlp 走代理
+    if proxy:
+        ydl_opts["proxy"] = proxy
+
     if merge_output_format:
         ydl_opts["merge_output_format"] = merge_output_format
 
@@ -94,7 +92,6 @@ def _download_once(
         info = ydl.extract_info(url, download=True)
         filepath = ydl.prepare_filename(info)
 
-    # 如果合并成 mp4，修正扩展名
     if merge_output_format:
         base, ext = os.path.splitext(filepath)
         mp4_path = base + ".mp4"
@@ -102,6 +99,7 @@ def _download_once(
             filepath = mp4_path
 
     return info, filepath
+
 
 
 def download_youtube_video(url: str, quality: str = "720p"):
