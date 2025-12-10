@@ -2,11 +2,23 @@ services:
   backend:
     build:
       context: ./backend
-    environment:
-      - APP_ENV=prod
     container_name: operations_backend
+
+    # 读 .env 里的配置（包括 PROXY_URL / YOUTUBE_DOWNLOAD_DIR 等）
     env_file:
       - ./backend/.env
+
+    # 可以额外覆盖几个关键环境变量
+    environment:
+      - APP_ENV=prod          # 覆盖 .env 里的 APP_ENV=dev，走生产配置
+      # 如果以后想在不同环境用不同代理，也可以在这里单独覆盖：
+      # - PROXY_URL=http://192.168.31.3:7898
+
+    # 挂载 YouTube 下载目录 & 日志目录，方便调试与持久化
+    volumes:
+      - /opt/operations_assistant_data/youtube:/data/youtube
+      - /opt/operations_assistant_data/logs:/data/logs
+
     expose:
       - "8000"
     restart: unless-stopped
