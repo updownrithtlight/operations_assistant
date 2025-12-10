@@ -6,7 +6,6 @@ import request from '../utils/request';
  */
 export const fetchKbFolderTree = async () => {
   const response = await request.get('/kb/folders/tree');
-  console.log('你没事吧',response)
   // 后端已用 ResponseTemplate 包装，这里按你的习惯取 data
   return response;   // { code, message, data }
 };

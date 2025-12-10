@@ -1,6 +1,6 @@
 // src/layouts/MainLayout.jsx
 import React, { useState, useMemo } from "react";
-import { Layout, Menu, Dropdown, Avatar, Breadcrumb, theme, Switch } from "antd";
+import { Layout, Menu,  Breadcrumb, theme, Switch } from "antd";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   UserOutlined,

@@ -1,7 +1,53 @@
+// src/api/menu.js
 import request from '../utils/request';
 
-export const getMenuTree = () => request.get('/menus/tree');
-export const getMenuList = () => request.get('/menus');
-export const createMenu = (data) => request.post('/menus', data);
-export const updateMenu = (id, data) => request.put(`/menus/${id}`, data);
-export const deleteMenu = (id) => request.delete(`/menus/${id}`);
+/**
+ * 获取菜单树
+ * GET /api/menus/tree
+ */
+export const getMenuTree = async () => {
+  const res = await request.get('/menus/tree'); // baseURL 里已经有 /api
+
+  return res;  // { code, message, data }
+};
+
+/**
+ * 获取菜单列表（平铺）
+ * GET /api/menus
+ */
+export const getMenuList = async () => {
+  const res = await request.get('/menus');
+    console.log('adfddf',res)
+  return res;
+};
+
+/**
+ * 新建菜单
+ * POST /api/menus
+ * @param {Object} data
+ */
+export const createMenu = async (data) => {
+  const res = await request.post('/menus', data);
+  return res;
+};
+
+/**
+ * 更新菜单
+ * PUT /api/menus/:id
+ * @param {number|string} id
+ * @param {Object} data
+ */
+export const updateMenu = async (id, data) => {
+  const res = await request.put(`/menus/${id}`, data);
+  return res;
+};
+
+/**
+ * 删除菜单
+ * DELETE /api/menus/:id
+ * @param {number|string} id
+ */
+export const deleteMenu = async (id) => {
+  const res = await request.delete(`/menus/${id}`);
+  return res;
+};
