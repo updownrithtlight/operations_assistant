@@ -6,7 +6,7 @@ from ..models import User
 bp = Blueprint("user", __name__)
 
 
-@bp.route("/", methods=["POST"])
+@bp.route("", methods=["POST"])
 def create_user():
     """
     创建用户：
@@ -42,7 +42,7 @@ def create_user():
     return jsonify(user.to_dict()), 201
 
 
-@bp.route("/", methods=["GET"])
+@bp.route("", methods=["GET"])
 def list_users():
     """
     ?status=active/disabled 可选

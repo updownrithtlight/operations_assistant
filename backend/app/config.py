@@ -58,6 +58,8 @@ class Config:
     )
     os.makedirs(YOUTUBE_DOWNLOAD_DIR, exist_ok=True)
     PROXY_URL= os.environ.get("PROXY_URL")
+    MINIO_INTERNAL_ENDPOINT =os.environ.get("MINIO_INTERNAL_ENDPOINT")
+    MINIO_PUBLIC_PREFIX=os.environ.get("MINIO_PUBLIC_PREFIX")
 class DevConfig(Config):
     DEBUG = True
 

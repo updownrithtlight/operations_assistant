@@ -1,4 +1,5 @@
 # app/utils/minio_storage.py
+import logging
 from typing import Optional, Dict
 
 from minio import Minio
@@ -6,7 +7,7 @@ from datetime import timedelta
 from typing import Union, Optional
 from flask import current_app, Request
 from minio.error import S3Error
-
+logger = logging.getLogger(__name__)
 
 
 def get_minio_client() -> Minio:
@@ -66,22 +67,46 @@ def _build_dynamic_public_base(request: Optional[Request]) -> str:
 
 def _rewrite_to_public_url(raw_url: str, dynamic_public_base: str) -> str:
     """
-    把内部 endpoint 重写成对外的 base：
+    把内部 MinIO endpoint 重写成对外可访问的 base。
+    例如：
+        internal:  http://192.168.31.145:9000
+        raw_url:   http://192.168.31.145:9000/files/xxx.docx?...
+        public:    http://192.168.31.138:5173/minio/files/xxx.docx?...
     """
-    if not raw_url:
+    if not raw_url or not dynamic_public_base:
         return raw_url
 
-    internal_endpoint = current_app.config.get("MINIO_INTERNAL_ENDPOINT", "").rstrip("/")
-    if not internal_endpoint or not dynamic_public_base:
-        # 没配，直接用原始 URL
+    internal_endpoint: str = (current_app.config.get("MINIO_INTERNAL_ENDPOINT") or "")
+    # 关键：把所有前后空白都干掉，只保留有意义的字符
+    internal_endpoint = internal_endpoint.strip().rstrip("/")
+    dynamic_public_base = dynamic_public_base.strip().rstrip("/")
+    raw_url = raw_url.strip()
+
+    # debug 输出真实内容
+    logger.info(
+        f"[URL-DEBUG] internal_endpoint={internal_endpoint!r}, "
+        f"dynamic_public_base={dynamic_public_base!r}, "
+        f"raw_url={raw_url!r}"
+    )
+
+    if not internal_endpoint:
         return raw_url
 
-    import re
-    internal_base = re.sub(r"/+$", "", internal_endpoint)
-    public_base_fixed = dynamic_public_base.rstrip("/")
+    # 如果压根不是以 internal 开头，就不要瞎替换了
+    if not raw_url.startswith(internal_endpoint):
+        logger.warning(
+            "[URL-DEBUG] raw_url does NOT start with internal_endpoint, skip rewrite. "
+            f"raw_url={raw_url!r}, internal_endpoint={internal_endpoint!r}"
+        )
+        return raw_url
 
-    # 只替换前缀
-    return raw_url.replace(internal_base, public_base_fixed, 1)
+    # 只替换前缀那一段
+    suffix = raw_url[len(internal_endpoint):]
+    new_url = dynamic_public_base + suffix
+
+    logger.info(f"[URL-DEBUG] rewritten_url={new_url!r}")
+    return new_url
+
 
 
 def generate_presigned_upload_url(

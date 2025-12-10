@@ -1,6 +1,6 @@
 # app/routes/kb_routes.py
 from flask import Blueprint
-from app.services import kb_service
+from ..services import kb_service
 
 bp = Blueprint("kb", __name__)
 # 目录树

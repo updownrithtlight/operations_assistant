@@ -1,4 +1,5 @@
 # app/services/document_service.py
+import logging
 from datetime import datetime, timedelta
 import re
 import uuid
@@ -16,6 +17,8 @@ from ..utils.minio_storage import (
 )
 from ..models.result import ResponseTemplate
 from ..exceptions.exceptions import CustomAPIException
+
+logger = logging.getLogger(__name__)
 
 
 def _build_object_key(req_json: dict) -> str:

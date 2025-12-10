@@ -46,7 +46,7 @@ def get_menu_tree():
     return jsonify(tree)
 
 
-@bp.route("/", methods=["GET"])
+@bp.route("", methods=["GET"])
 def list_menus():
     """
     扁平列表，后台菜单管理页面用。
