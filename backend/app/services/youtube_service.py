@@ -1,4 +1,5 @@
 # backend/app/services/youtube_service.py
+import logging
 import os
 import uuid
 import json
@@ -8,6 +9,8 @@ from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 
 from ..config import Config
+
+logger = logging.getLogger(__name__)
 
 
 def extract_video_id(url: str) -> str:
@@ -72,6 +75,8 @@ def _download_once(
 ):
     proxy = Config.PROXY_URL
 
+    logger.info(f"[yt-dlp] Start download | url={url} | fmt={fmt} | out={outtmpl} | proxy={proxy}")
+
     ydl_opts: dict = {
         "format": fmt,
         "outtmpl": outtmpl,
@@ -81,21 +86,28 @@ def _download_once(
         "no_keep_fragments": True,
     }
 
-    # 如果设置了代理就让 yt-dlp 走代理
     if proxy:
         ydl_opts["proxy"] = proxy
+        logger.info(f"[yt-dlp] Using proxy: {proxy}")
 
     if merge_output_format:
         ydl_opts["merge_output_format"] = merge_output_format
 
-    with YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filepath = ydl.prepare_filename(info)
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filepath = ydl.prepare_filename(info)
+            logger.info(f"[yt-dlp] Download success | output={filepath}")
+    except Exception as e:
+        logger.error(f"[yt-dlp] Download failed | url={url} | error={repr(e)}")
+        raise
 
+    # 处理 mp4 合并情况
     if merge_output_format:
         base, ext = os.path.splitext(filepath)
         mp4_path = base + ".mp4"
         if ext.lower() != ".mp4" and os.path.exists(mp4_path):
+            logger.info(f"[yt-dlp] Auto-merged to MP4: {mp4_path}")
             filepath = mp4_path
 
     return info, filepath
@@ -138,7 +150,7 @@ def download_youtube_video(url: str, quality: str = "720p"):
             merge_output_format="mp4",  # 如是分轨，会用 ffmpeg 合并成 mp4
         )
     except DownloadError as e:
-        print(f"[yt-dlp] primary format failed: {e}. Try fallback 'best' ...")
+        logger.error(f"[yt-dlp] primary format failed: {e}. Try fallback 'best' ...")
         vinfo, video_path = _download_once(
             url,
             fmt=fallback_fmt,
@@ -167,7 +179,7 @@ def download_youtube_video(url: str, quality: str = "720p"):
         audio_abs_path = audio_path
         audio_size = os.path.getsize(audio_abs_path) if os.path.exists(audio_abs_path) else None
     except DownloadError as e:
-        print(f"[yt-dlp] download audio failed: {e}")
+        logger.error(f"[yt-dlp] download audio failed: {e}")
         audio_abs_path = None
         audio_size = None
 
@@ -195,7 +207,7 @@ def download_youtube_video(url: str, quality: str = "720p"):
             json.dump(meta, f, ensure_ascii=False, indent=2)
     except Exception as e:
         # 写 meta 失败不影响下载主流程，只打个日志
-        print(f"[yt-dlp] write meta.json failed: {e}")
+        logger.error(f"[yt-dlp] write meta.json failed: {e}")
 
     # ========== 第 4 步：返回信息给调用方（任务系统 / API） ==========
     return meta

@@ -1,8 +1,7 @@
-import os
-from flask import request, current_app, send_file
-from app.models.kb_models import KbFolder, KbFile, KbTag
-from app.models.result import ResponseTemplate
-from app.exceptions.exceptions import CustomAPIException
+from flask import request
+from ..models.kb_models import KbFolder, KbFile, KbTag
+from ..models.result import ResponseTemplate
+from ..exceptions.exceptions import CustomAPIException
 from ..extensions import db
 
 def _build_folder_path(folder: KbFolder) -> str:
