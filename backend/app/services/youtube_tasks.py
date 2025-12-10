@@ -6,20 +6,21 @@ import json
 from typing import Dict, Any, Optional
 
 from ..services.youtube_service import download_youtube_video
-from ..extensions import redis_client
+from .. import extensions  # ✅ 关键：导入模块，而不是导入 redis_client 值
 
 logger = logging.getLogger(__name__)
 
-# Redis 里的 key 前缀 & 任务保留时间（秒）
 TASK_KEY_PREFIX = "yt_task:"
 TASK_TTL_SECONDS = 24 * 3600  # 任务信息保留 24 小时，可按需调整
 
 
-def _assert_redis():
-    """确保 redis_client 已初始化，否则抛异常"""
-    if redis_client is None:
-        raise RuntimeError("redis_client is not initialized. "
-                           "Did you call init_extensions(app)?")
+def _get_redis():
+    rc = extensions.redis_client
+    if rc is None:
+        raise RuntimeError(
+            "redis_client is not initialized. Did you call init_extensions(app)?"
+        )
+    return rc
 
 
 def _task_key(task_id: str) -> str:
@@ -28,8 +29,8 @@ def _task_key(task_id: str) -> str:
 
 def _load_task(task_id: str) -> Optional[Dict[str, Any]]:
     """从 Redis 读取任务"""
-    _assert_redis()
-    raw = redis_client.get(_task_key(task_id))
+    r = _get_redis()
+    raw = r.get(_task_key(task_id))
     if not raw:
         return None
     try:
@@ -41,22 +42,12 @@ def _load_task(task_id: str) -> Optional[Dict[str, Any]]:
 
 def _save_task(task_id: str, data: Dict[str, Any]) -> None:
     """把任务写回 Redis，并设置 TTL"""
-    _assert_redis()
-    try:
-        redis_client.set(_task_key(task_id), json.dumps(data), ex=TASK_TTL_SECONDS)
-    except Exception as e:
-        logger.error(f"[Task] save task to redis failed | task_id={task_id} | error={repr(e)}")
-        raise
+    r = _get_redis()
+    r.set(_task_key(task_id), json.dumps(data), ex=TASK_TTL_SECONDS)
 
 
 def create_task(url: str, quality: str = "720p") -> str:
-    """
-    创建任务，启动后台线程执行下载，返回 task_id
-
-    注意：任务状态存 Redis，多进程 / 多实例都能共享。
-    """
-    _assert_redis()
-
+    """创建任务，启动后台线程执行下载，返回 task_id"""
     task_id = uuid.uuid4().hex
     task_data: Dict[str, Any] = {
         "status": "pending",
@@ -83,23 +74,17 @@ def _run_task(task_id: str, url: str, quality: str):
     """真正跑下载的后台线程"""
     logger.info(f"[Task] RUN | task_id={task_id}")
 
-    task = _load_task(task_id) or {
-        "status": "pending",
+    task = _load_task(task_id) or {}
+    task.update({
+        "status": "running",
         "progress": 0,
-        "result": None,
-        "error": None,
-        "url": url,
-        "quality": quality,
-    }
-    task["status"] = "running"
-    task["progress"] = 0
+    })
     _save_task(task_id, task)
 
     try:
-        # 这里可以以后接 yt-dlp 的 hook 更新 progress，现在先写死 0 / 100
         info = download_youtube_video(url, quality)
-
         logger.info(f"[Task] SUCCESS | task_id={task_id}")
+
         task = _load_task(task_id) or {}
         task.update({
             "status": "finished",
@@ -120,5 +105,5 @@ def _run_task(task_id: str, url: str, quality: str):
 
 
 def get_task(task_id: str) -> Optional[Dict[str, Any]]:
-    """查询任务信息（从 Redis 读）"""
+    """查询任务信息"""
     return _load_task(task_id)
