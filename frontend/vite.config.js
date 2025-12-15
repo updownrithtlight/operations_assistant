@@ -1,15 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
-const BACKEND_PORT = 5000;         // Flask 端口
-const MINIO_INTERNAL = '192.168.31.145:9000';  // MinIO 实际监听地址
+const BACKEND_PORT = 5000;                    // Flask 端口
+const MINIO_INTERNAL = '192.168.31.145:9000'; // MinIO 实际监听地址
+const ONLYOFFICE_INTERNAL = '192.168.31.145:8080'; // ⭐ OnlyOffice DocumentServer 地址
 
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
       // =====================
-      // 原来的 /api 动态代理
+      // /api 动态代理
       // =====================
       '/api': {
         target: 'http://127.0.0.1:' + BACKEND_PORT,
@@ -41,26 +42,17 @@ export default defineConfig({
       },
 
       // =====================
-      // 新增的 /minio 反代
-      // 等价于 Nginx 的 location /minio/
+      // /minio 反代（等价 Nginx location /minio/）
       // =====================
       '/minio': {
-        // 目标 MinIO
         target: `http://${MINIO_INTERNAL}`,
-        // 不让 Vite 自动改 origin，由我们手动设置 Host
         changeOrigin: false,
-        /**
-         * Nginx:
-         *  location /minio/ { proxy_pass http://localhost:9000/; }
-         * ⇒ /minio/xxx  →  /xxx
-         */
+        // /minio/xxx -> /xxx
         rewrite: (path) => path.replace(/^\/minio/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq, req) => {
-            // 固定给 MinIO 的 Host，防止 presigned 签名失效
             proxyReq.setHeader('host', MINIO_INTERNAL);
 
-            // 模拟 Nginx 的几个 header
             const remoteAddr = req.socket.remoteAddress || '';
             proxyReq.setHeader('X-Real-IP', remoteAddr);
             proxyReq.setHeader('X-Forwarded-For', remoteAddr);
@@ -69,8 +61,6 @@ export default defineConfig({
               req.headers['x-forwarded-proto'] || 'http'
             );
             proxyReq.setHeader('Connection', '');
-
-            // Vite 里没法关 chunked_transfer_encoding，这个一般问题不大
           });
 
           proxy.on('proxyRes', (proxyRes, req, res) => {
@@ -79,6 +69,47 @@ export default defineConfig({
 
           proxy.on('error', (err) => {
             console.log('🔴 MinIO 代理错误:', err.message);
+          });
+        },
+      },
+
+      // =====================
+      // /onlyoffice 反代
+      // 等价于 Nginx: location /onlyoffice/ { proxy_pass http://ONLYOFFICE_INTERNAL/; ... }
+      // =====================
+      '/onlyoffice': {
+        target: `http://${ONLYOFFICE_INTERNAL}`,
+        changeOrigin: false,
+        ws: true, // ⭐ OnlyOffice 用到 WebSocket，记得打开
+        // 一般我们保持 /onlyoffice 前缀，不做 rewrite
+        // 如果你线上是挂在根路径，可以按需改：
+        rewrite: (path) => path.replace(/^\/onlyoffice/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            // 给 DocumentServer 的 Host，用内部地址最稳
+            proxyReq.setHeader('host', ONLYOFFICE_INTERNAL);
+
+            const remoteAddr = req.socket.remoteAddress || '';
+            proxyReq.setHeader('X-Real-IP', remoteAddr);
+            proxyReq.setHeader('X-Forwarded-For', remoteAddr);
+            proxyReq.setHeader(
+              'X-Forwarded-Proto',
+              req.headers['x-forwarded-proto'] || 'http'
+            );
+
+            // WebSocket & 长连接
+            proxyReq.setHeader('Connection', 'upgrade');
+            if (req.headers.upgrade) {
+              proxyReq.setHeader('Upgrade', req.headers.upgrade);
+            }
+          });
+
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            console.log('🟡 OnlyOffice 响应状态:', proxyRes.statusCode);
+          });
+
+          proxy.on('error', (err) => {
+            console.log('🔴 OnlyOffice 代理错误:', err.message);
           });
         },
       },
