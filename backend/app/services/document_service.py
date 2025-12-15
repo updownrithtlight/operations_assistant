@@ -5,7 +5,7 @@ import re
 import uuid
 
 from flask import request, current_app
-from ..extensions import db
+from backend.app.extensions import db
 
 # 这里直接用刚刚建好的模型和枚举
 from ..models.document import Document, DocumentStatus, FileType

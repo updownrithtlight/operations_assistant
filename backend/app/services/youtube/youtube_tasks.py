@@ -5,8 +5,8 @@ import uuid
 import json
 from typing import Dict, Any, Optional
 
-from ..services.youtube_service import download_youtube_video
-from .. import extensions  # ✅ 关键：导入模块，而不是导入 redis_client 值
+from ..youtube.youtube_service import download_youtube_video
+from ... import extensions
 
 logger = logging.getLogger(__name__)
 

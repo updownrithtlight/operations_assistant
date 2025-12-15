@@ -4,7 +4,7 @@ import os
 from flask import Blueprint, request, jsonify, send_file
 
 from ..config import Config
-from ..services.youtube_tasks import create_task, get_task
+from ..services.youtube.youtube_tasks import create_task, get_task
 
 bp = Blueprint("youtube", __name__)
 

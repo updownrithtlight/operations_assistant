@@ -8,7 +8,7 @@ from urllib.parse import urlparse, parse_qs
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 
-from ..config import Config
+from backend.app.config import Config
 
 logger = logging.getLogger(__name__)
 

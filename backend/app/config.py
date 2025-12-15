@@ -60,6 +60,16 @@ class Config:
     PROXY_URL= os.environ.get("PROXY_URL")
     MINIO_INTERNAL_ENDPOINT =os.environ.get("MINIO_INTERNAL_ENDPOINT")
     MINIO_PUBLIC_PREFIX=os.environ.get("MINIO_PUBLIC_PREFIX")
+
+
+    ALIBABA_APP_KEY = os.environ.get("ALIBABA_APP_KEY")
+    ALIBABA_APP_SECRET = os.environ.get("ALIBABA_APP_SECRET")
+    ALIBABA_REDIRECT_URI = os.environ.get("ALIBABA_REDIRECT_URI")
+    # 注意：这里我把回调路径改成 /api/alibaba/callback，更符合你项目的 REST 风格
+    ALIBABA_OPEN_API_BASE = os.environ.get("ALIBABA_OPEN_API_BASE")
+    ALIBABA_OPEN_API_SERVER_URL = os.environ.get("ALIBABA_OPEN_API_SERVER_URL")
+    ALIBABA_OPEN_API_TOKEN_SERVER_URL = os.environ.get("ALIBABA_OPEN_API_TOKEN_SERVER_URL")
+
 class DevConfig(Config):
     DEBUG = True
 
