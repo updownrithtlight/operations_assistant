@@ -11,6 +11,9 @@ from .video_service import AlibabaVideoService
 import tempfile
 import os
 
+from ..price_integrity import ensure_price_integrity
+
+
 class AlibabaProductFlow:
     """
     阿里国际站 ICBU 标准发品流程（无 SKU）
@@ -113,20 +116,18 @@ class AlibabaProductFlow:
         builder = PayloadBuilder(schema_json)
 
         # ========= 基础字段 =========
-        raw_row = {
+        flat_data = {}
+        flat_data.update(mapper.map_row({
             "productTitle": "API Minimal Test Product",
-            "scPrice": "1",  # 阶梯价
-            "minOrderQuantity": 1,
+            "scPrice": "1",  # 阶梯定价
+            "minOrderQuantity": 1,  # MOQ（与 ladderPrice 对齐）
             "productDescType": "2",  # 普通编辑
             "saleType": "normal",
             "priceUnit": "4",  # Piece
             "superText": "<p>This is a minimal product published by API.</p>",
-        }
+        }))
 
-        flat_data = {}
-        flat_data.update(mapper.map_row(raw_row))
-
-        # ========= 图片 =========
+        # ========= 图片（必填） =========
         images = AlibabaImageService.list_images(token)
         image_list = (
             images.get("alibaba_icbu_photobank_list_response", {})
@@ -146,21 +147,30 @@ class AlibabaProductFlow:
             }
         })
 
-        # ========= 阶梯价（无 period） =========
+        # ========= 阶梯价（价格，必填） =========
         flat_data.update({
             "ladderPrice.ladderPrice_0.quantity": 1,
             "ladderPrice.ladderPrice_0.price": 100,
         })
 
-        # ========= 物流（协商物流，最稳） =========
+        # ========= 交期（必填） =========
+        flat_data.update({
+            "ladderPeriod.ladderPeriod_0.quantity": 1,
+            "ladderPeriod.ladderPeriod_0.day": 7,
+        })
+
+        # ========= ⭐ 价格完整性兜底（关键） =========
+        ensure_price_integrity(flat_data)
+
+        # ========= 物流（最稳：协商物流） =========
         flat_data.update({
             "shippingTemplate.templateType": "aliLogistics",
             "shippingTemplate.shippingTemplateId": "2061493154",
         })
 
+        # ========= 构建并发布 =========
         payload = builder.build(flat_data)
         xml = AlibabaSchemaService.payload_to_xml(payload, schema_json)
-
         schema_xml_fields = AlibabaSchemaService.build_schema_xml_fields(flat_data)
 
         return AlibabaSchemaService.publish(
